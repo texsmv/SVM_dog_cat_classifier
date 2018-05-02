@@ -2,6 +2,42 @@ import numpy as np
 import pywt
 import cv2
 import os
+import imutils
+
+
+def extract_color_histogram(image, bins=(8, 8, 8)):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hist = cv2.calcHist([hsv], [0, 1, 2], None, bins, [0, 256, 0, 256, 0, 256])
+    if imutils.is_cv2():
+        hist = cv2.normalize(hist)
+    else:
+        cv2.normalize(hist, hist)
+    return hist.flatten()
+
+
+def feature_vector(image):
+    feature_vector = np.array([])
+    R = []
+    G = []
+    B = []
+    for i in image:
+        for j in i:
+            R.append(j[0])
+            G.append(j[1])
+            B.append(j[2])
+    maxs = [max(R), max(G), max(B)]
+    mins = [min(R), min(G), min(B)]
+    feature_vector = np.concatenate([feature_vector, maxs])
+    feature_vector = np.concatenate([feature_vector, mins])
+    means, stds = cv2.meanStdDev(image)
+    means_stds = np.concatenate([means, stds]).flatten()
+    feature_vector = np.concatenate([feature_vector, means_stds])
+    feature_vector = np.concatenate([feature_vector, extract_color_histogram(image)])
+    return feature_vector
+
+
+def feature_vector_4_img(img):
+    return np.concatenate([feature_vector(e) for e in img])
 
 
 def resize(mat):
@@ -32,6 +68,7 @@ def wvt(img):
 def process_image(mat):
     mat = resize(mat)
     im, _ = wvt(mat)
+    im, _ = wvt(im)
     img, p = wvt(im)
     return [img, p[0], p[1], p[2]]
 
@@ -41,9 +78,30 @@ def script():
     dogs_path = os.listdir("dogs/")
     cats_imgs = [cv2.imread("cats/" + cats_path[i]) for i in range(0, len(cats_path))]
     dogs_imgs = [cv2.imread("dogs/" + dogs_path[i]) for i in range(0, len(dogs_path))]
-    cats_imgs_haar = [process_image(e) for e in cats_imgs]
-    dogs_imgs_haar = [process_image(e) for e in dogs_imgs]
-    return cats_imgs_haar, dogs_imgs_haar
+
+    cats_imgs_haar = [process_image(e) for e in cats_imgs if e is not None]
+    dogs_imgs_haar = [process_image(e) for e in dogs_imgs if e is not None]
+    cats_vcs = [feature_vector_4_img(e) for e in cats_imgs_haar]
+    dogs_vcs = [feature_vector_4_img(e) for e in dogs_imgs_haar]
+    return cats_vcs, dogs_vcs
+
+
+def script2():
+    cats_path = os.listdir("test/cats/")
+    dogs_path = os.listdir("test/dogs/")
+    cats_imgs = [cv2.imread("test/cats/" + cats_path[i]) for i in range(0, len(cats_path))]
+    dogs_imgs = [cv2.imread("test/dogs/" + dogs_path[i]) for i in range(0, len(dogs_path))]
+
+    cats_imgs_haar = [process_image(e) for e in cats_imgs if e is not None]
+    dogs_imgs_haar = [process_image(e) for e in dogs_imgs if e is not None]
+    cats_vcs = [feature_vector_4_img(e) for e in cats_imgs_haar]
+    dogs_vcs = [feature_vector_4_img(e) for e in dogs_imgs_haar]
+    return cats_vcs, dogs_vcs
 
 
 cats, dogs = script()
+X = np.concatenate([cats, dogs])
+print(np.shape(X))
+Y = np.array([0] * len(cats) + [1] * len(dogs))
+print(np.shape(Y))
+T_c , T_d = script2()
