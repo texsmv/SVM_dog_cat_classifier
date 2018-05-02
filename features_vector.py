@@ -1,15 +1,29 @@
 import cv2
 import numpy as np
 
-img = cv2.imread('data_set/gato1.jpg')
-#width,height = img.shape[:2]
-height = np.size(img, 0)
-width = np.size(img, 1)
-print(width,height)
+def feature_vector(image):
+    feature_vector = np.array([])
+    
+    R = []
+    G = []
+    B = []
+    for i in image:
+        for j in i:
+            R.append(j[0])
+            G.append(j[1])
+            B.append(j[2])
+    maxs = [max(R),max(G),max(B)]
+    mins = [min(R),min(G),min(B)]
+    feature_vector = np.concatenate([feature_vector, maxs])
+    feature_vector = np.concatenate([feature_vector, mins])
+    means, stds = cv2.meanStdDev(image)
+    means_stds = np.concatenate([means, stds]).flatten()
+    feature_vector = np.concatenate([feature_vector, means_stds])
+    return feature_vector
 
-print(len(img[0]))
-print(len(img))
 
-cv2.imshow('image',img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+image = cv2.imread("data_set/charizard.png")
+image2 = cv2.imread("data_set/lenna.png")
+print(image.shape)
+print(feature_vector(image))
+print(feature_vector(image2))
