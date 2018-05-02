@@ -22,8 +22,8 @@ def feature_vector(image):
     return feature_vector
 
 
-image = cv2.imread("data_set/charizard.png")
-image2 = cv2.imread("data_set/lenna.png")
+image = cv2.imread("cats/gato.jpg")
+image2 = cv2.imread("dogs/perro.jpg")
 print(image.shape)
 print(feature_vector(image))
 print(feature_vector(image2))
