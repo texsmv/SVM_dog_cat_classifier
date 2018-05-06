@@ -3,6 +3,7 @@ import pywt
 import cv2
 import os
 import imutils
+from sklearn.externals import joblib
 
 
 def extract_color_histogram(image, bins=(8, 8, 8)):
@@ -78,7 +79,6 @@ def script():
     dogs_path = os.listdir("dogs/")
     cats_imgs = [cv2.imread("cats/" + cats_path[i]) for i in range(0, len(cats_path))]
     dogs_imgs = [cv2.imread("dogs/" + dogs_path[i]) for i in range(0, len(dogs_path))]
-
     cats_imgs_haar = [process_image(e) for e in cats_imgs if e is not None]
     dogs_imgs_haar = [process_image(e) for e in dogs_imgs if e is not None]
     cats_vcs = [feature_vector_4_img(e) for e in cats_imgs_haar]
@@ -91,7 +91,6 @@ def script2():
     dogs_path = os.listdir("test/dogs/")
     cats_imgs = [cv2.imread("test/cats/" + cats_path[i]) for i in range(0, len(cats_path))]
     dogs_imgs = [cv2.imread("test/dogs/" + dogs_path[i]) for i in range(0, len(dogs_path))]
-
     cats_imgs_haar = [process_image(e) for e in cats_imgs if e is not None]
     dogs_imgs_haar = [process_image(e) for e in dogs_imgs if e is not None]
     cats_vcs = [feature_vector_4_img(e) for e in cats_imgs_haar]
@@ -105,3 +104,7 @@ print(np.shape(X))
 Y = np.array([0] * len(cats) + [1] * len(dogs))
 print(np.shape(Y))
 T_c , T_d = script2()
+joblib.dump(X, "X.pkl")
+joblib.dump(Y, "Y.pkl")
+joblib.dump(T_c, "Tc.pkl")
+joblib.dump(T_d, "Td.pkl")
